@@ -1,2 +1,3 @@
-# DS&ADS
-2019-2020 ZJU DS(hqm) &amp; ADS(yds) Homework &amp; Project
+# zju course assignments
+
+2018-2021 ZJU CS Course Homework & Projects
