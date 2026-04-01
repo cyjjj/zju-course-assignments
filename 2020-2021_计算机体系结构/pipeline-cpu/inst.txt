@@ -1,0 +1,103 @@
+【注释版】
+begin:
+00	Lw $1, 20($zero)		//R1=4
+04	Lw $2, 24($zero)		//R2=1
+08	Add $3,$2,$1    	//R3=5	//2LW-ALU:forwarding:1 stall
+0C	Sub $4,$3,$1      	//R4=1	//2ALU-ALU
+10	And $5,$3,$1     	//R5=4	//无冲突
+14	Or $6,$3,$1		//R6=5	//无冲突
+18	addi $6,$3,4		//$6=9	//无冲突
+1C	Add $7, $zero, $1		//R7=4	//无冲突
+20	Lw $8,0($7)     	//R8=8	//2ALU-LW
+24	Sw $8,8($7)    		//	//2LW-SW：forwarding可以解决
+28	Lw $9, 8($7)		//R9=8    
+2C	Sw $7, 0($9)		//	//2LW-SW: forwarding:1 stall 
+30	Lw $10,0($9)		//R10=4
+34	Add $11, $1, $1 	//R11=8
+38	Add $10, $1, $10	//R10=8 //1LW-ALU:forwarding可以解决
+3C	Add $10,$1,$2		//R10=5
+40	Beq $10, $11 ,lable1   	// not taken//2+1ALU-BEQ//	branch x
+44	Lw $1, 8($7)		//R1=8
+48	Lw $2, 24($zero)		//R2=1
+lable1:
+4C	Add $3,$2,$1		//R3=9	//2LW-ALU
+50	Sub $4,$3,$1		//R4=1   //2ALU-R-R
+54	Addi $20, $4, 1 	//R20=2	//2ALU-addi
+58	Ori $20, $4, 0x8000   	//R20=0x8001	//无冲突 无符号扩展
+5C	Bne $1, $2, lable2  		//taken x
+60	Lw $1,20($zero)		//不执行
+lable2:
+64	Lw $2,24($zero)		//R2=1
+68	Add $3,$2,$1		//R3=9   //2ALU
+6C	Sub $4,$3,$1		//R4=1   //2ALU x
+70	Jal lable3			//R31=116(0x74)
+74	Srl $5,$1,2		//R5=2 //移位指令
+78	Lui $5, 0x1111		//R5=0x11110000	//无冲突
+7C	Addi $6,$5,0x8000		//R6=0x11108000	符号扩展//2forwarding可以解决
+80	J begin			//j
+lable3:
+84	Slt $3,$1,$2		//R3=0
+88	Slti $4,$3,0x8000	//R4=0	//2forwarding可以解决
+8C	Andi $5,$6,0x11		//R5=1	
+90	Jr $31			//回到1d
+
+【无注释版】
+begin:
+lw $at, 20($zero)
+lw $v0, 24($zero)
+add $v1, $v0, $at
+sub $a0, $v1, $at
+and $a1, $v1, $at
+or $a2, $v1, $at
+addi $a2, $v1, 4
+add $a3, $zero, $at
+lw $t0, ($a3)
+sw $t0, 8($a3)
+lw $t1, 8($a3)
+sw $a3, ($t1)
+lw $t2, ($t1)
+add $t3, $at, $at
+add $t2, $at, $t2
+add $t2, $at, $v0
+beq $t2, $t3, label_0
+lw $at, 8($a3)
+lw $v0, 24($zero)
+label_0:
+add $v1, $v0, $at
+sub $a0, $v1, $at
+addi $s4, $a0, 1
+ori $s4, $a0, 0x8000
+bne $at, $v0, label_1
+lw $at, 20($zero)
+label_1:
+lw $v0, 24($zero)
+add $v1, $v0, $at
+sub $a0, $v1, $at
+jal label_2
+srl $a1, $at, 2
+lui $a1, 0x1111
+addi $a2, $a1, 0x8000
+j begin
+label_2:
+slt $v1, $at, $v0
+slti $a0, $v1, 0x8000
+andi $a1, $a2, 17
+jr $ra
+
+
+--------------------------
+8C010014, 8C020018, 00411820, 00612022, 00612824, 00613025, 20660004, 00013820,
+8CE80000, ACE80008, 8CE90008, AD270000, 8D2A0000, 00215820, 002A5020, 00225020,
+114B0002, 8CE10008, 8C020018, 00411820, 00612022, 20940001, 34948000, 14220001,
+8C010014, 8C020018, 00411820, 00612022, 0C000021, 00012882, 3C051111, 20A68000,
+08000000, 0022182A, 28648000, 30C50011, 03E00008;
+
+
+datamem:
+00000000，
+00000008，
+00000000，
+00000000，
+00000000，
+00000004，
+00000001，
